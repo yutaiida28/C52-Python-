@@ -1,5 +1,5 @@
 import random
-#exercice 1
+#exercice 1#########################################################################
 # hidden_number = random.randrange(0,100)
 # guess = 5
 # found = False
@@ -22,7 +22,7 @@ import random
 #         else:
 #             print("the hidden nuber is smaler then your guess")
 
-#exercice 1.2
+#exercice 1.2#######################################################
 # print("Callculatrice simple")
 
 # premier_nombre = float (input("le premier chiffre: "))
@@ -42,12 +42,18 @@ import random
 #     - Exercice 1.3 : Table de multiplication
 #     - Demandez à l'utilisateur d'entrer deux nombres entiers entre 2 et 10 (en 2 saisies distinctes).
 #     - Affichez la table de multiplication de ces nombres.
+my_liste = [2,3,4,5,6,7,8,9,]
+print("afficheur de table mathematic")
+premier_nombre=1
+deuxiem_nombre=1
+valide = False
+while valide == False :
+    premier_nombre = float (input("le premier chifre entre 2 et 10 "))
+    if premier_nombre in my_liste:
+        deuxiem_nombre = float (input("le deuxiem chifre entre 2 et 10 "))
+        if deuxiem_nombre in my_liste:
+            valide = True
 
-# - Exercice 1.4 : Trier simplement trois nombres (sans fonctions ni collections)
-#     - Objectif. Afficher trois entiers saisis en ordre croissant sans utiliser de liste ni la fonction `sorted(...)`.
-#     - Demander à l'usager de saisir trois entiers `a`, `b` et `c` (en 3 saisies distinctes).
-#     - Réordonner ces trois entiers en ordre croissant.
-#     - Afficher sur trois lignes :
-#         - les trois entiers dans l'ordre saisies
-#         - les trois entiers en ordre croissant sur une seule ligne
-#         - si les trois variables sont strictement différentes les unes des autres, afficher `Strict` sinon afficher `Non-strict`
+   
+
+
