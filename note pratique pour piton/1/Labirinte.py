@@ -33,16 +33,16 @@ while not maze_clear:
             print("that not a valid move try again")
             step_counter += 1
     if char == "W":
-        if pos['x'] == 1:
+        if pos[0] == 1:
             break
         else:
             pos- moves['w']
     elif char == "a":
         pass
     elif char == "s":
-        if pos['x'] == 11:
+        if pos[0] == 11:
             break
         else:
-            pos['x'] += 1    
+            pos += moves['s']    
     else:
         pass
