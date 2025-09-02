@@ -17,12 +17,15 @@ maze = ( #tuple
 
 step_counter = int(0)
 wall_hit = int(0)
+
 moves = {'w': (-1, 0), 's': (1, 0), 'a': (0, -1), 'd': (0, 1)}
 pos = (1,1)
+
 while not maze_clear:
     for i in maze:
         print(i)
     valid_move = False
+    
     while not valid_move:
         char = input("use wasd to reach the goal :")
         print(pos)
