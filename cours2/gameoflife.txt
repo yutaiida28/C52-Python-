@@ -1,0 +1,5 @@
+un automate cellulaire c'est in monde discret (un monde fefini)
+un tableux de taille presdefini with et hight caque celule Ci,j a 2 etat possible en vie ou mort 
+puis sur la grille on genere des celule alleatoir G0i,j pour tous random  ( etat initial )
+avant de changer d'etat (les 8 autour) il faut voir si il sont vivant 
+les bordure reste mort 
