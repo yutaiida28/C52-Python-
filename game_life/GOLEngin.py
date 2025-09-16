@@ -101,36 +101,35 @@ class GOLEngine:
     
 # quelques tests simples    
 def main():
-    gol = GOLEngine(12, 10)
+    gol = GOLEngine(4, 4)
     
-    gol.resize(12, 9)
-    print(f'taille : {gol.width} x {gol.height}')
+    # gol.resize(12, 9)
+    # print(f'taille : {gol.width} x {gol.height}')
 
-    gol.width = 13
-    gol.height = 8
-    print(f'taille : {gol.width} x {gol.height}')
+    # gol.width = 13
+    # gol.height = 8
+    # print(f'taille : {gol.width} x {gol.height}')
 
-    gol.set_cell_value(4, 3, 0)
-    gol.set_cell_value(5, 3, 1)
-    print(f'(4, 3) = {gol.cell_value(4, 3)}')
-    print(f'(5, 3) = {gol.cell_value(5, 3)}')
+    # gol.set_cell_value(4, 3, 0)
+    # gol.set_cell_value(5, 3, 1)
+    # print(f'(4, 3) = {gol.cell_value(4, 3)}')
+    # print(f'(5, 3) = {gol.cell_value(5, 3)}')
 
-    gol.randomize(0.95)
-    print(f'(4, 3) = {gol.cell_value(4, 3)}')
-    print(f'(5, 3) = {gol.cell_value(5, 3)}')
+    # gol.randomize(0.95)
+    # print(f'(4, 3) = {gol.cell_value(4, 3)}')
+    # print(f'(5, 3) = {gol.cell_value(5, 3)}')
 
-    gol.randomize(0.05)
-    print(f'(4, 3) = {gol.cell_value(4, 3)}')
-    print(f'(5, 3) = {gol.cell_value(5, 3)}')
+    # gol.randomize(0.05)
+    # print(f'(4, 3) = {gol.cell_value(4, 3)}')
+    # print(f'(5, 3) = {gol.cell_value(5, 3)}')
     
     gol.randomize(0.5)
     gol.print()
     gol.process()
     gol.print()
-
-    pass
+    
 
 
 if __name__ == '__main__':
-    main()
+        main()
     
