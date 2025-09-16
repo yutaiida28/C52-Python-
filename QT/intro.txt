@@ -1,0 +1,7 @@
+QT est un abstraction sur un os autrement dit QT c'est un wrapper sur un os que ça soit ios linux windows 
+en QT on a des layout qui contient des widgets
+
+on crees un application avec un widget 
+objet layout 
+
+un Qwidget possede un lyout
