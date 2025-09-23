@@ -1,7 +1,6 @@
-# version on a fait pour une couleur maintenent on vas le fair pour les 2 autre mais le code est plutot redondent donc 
-
+# ici on modifie les code pour quil y a seulement un convantion decriture
 import sys
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot, Signal
 from PySide6.QtGui import QPixmap, QColor
 from PySide6.QtWidgets import ( QApplication,
                                 QWidget,
@@ -10,8 +9,12 @@ from PySide6.QtWidgets import ( QApplication,
                                 QHBoxLayout,
                                 QVBoxLayout)
 
+from __feature__ import snake_case, true_property
+
 class ColorPicker(QWidget):
     
+    colorChanged = Signal(QColor)
+
     def __init__(self, parent = None):
         super().__init__(parent)
         
@@ -77,6 +80,7 @@ class ColorPicker(QWidget):
         image.fill(QColor(r,g,b))
         color_widget.setPixmap(image)
     
+    @Slot()
     def __update_colors(self):
         r = self.__red_sb.value()
         g = self.__green_sb.value()
@@ -86,22 +90,53 @@ class ColorPicker(QWidget):
         self.__update_color(self.__blue_color,0,0,b)
         self.__update_color(self.__mixed_color,r,g,b)
 
+        #emission explicite du signial colorChanged
+        self.colorChanged.emit(self.color)
+
+    @override
     def showEvent(self, event):
         super().showEvent(event)
         self.__update_colors()
+
+    @property
+    def color(self):
+        r = self.__red_sb.value()
+        g = self.__green_sb.value()
+        b = self.__blue_sb.value()
+        return QColor(r,g,b)
+    
+    @color.setter
+    def color(self, value):
+        if value != self.color:
+            self.__red_sb.value() = value.red()
+            self.__green_sb.value() = value.green()
+            self.__blue_sb.value() = value.blue()
+
+class DemoColorPickers(QWidget):
+
+    def __init__(self):
+        super().__init__()
+
+        self._color_pickers = [ColorPicker() for _ in range(5)]
+
+        self._color_pickers[0].colorChanged.connect(self._color_pickers[2].set_color)
+
+        layout = QVBoxLayout()
+        for color_picker in self._color_pickers:
+            layout.add_widget(color_picker)
+
+        layout.add_stretch()
+
+        self.set_layout(layout)
 
 
 def main():
     app = QApplication(sys.argv) # ceci est le rapper de l'application c'est ce qui ecoute le imput de l'usager (while action = 0 rien else il dispatch cest info a la bonne place 
 
-    #sys.argv sont les argument passée en ligne de commande quand on lance l'application
+    w = DemoColorPickers(QWidget) 
+    w.show() 
 
-    w = ColorPicker() # C'est la fenêtre
-
-    w.show() # Affichage de la fenêtre
-
-    sys.exit(app.exec()) # On roule l'application et quand elle est terminé on fait un exit
-    # est aussi comme un blocker 
+    sys.exit(app.exec()) 
 
 if __name__ == '__main__':
     main()

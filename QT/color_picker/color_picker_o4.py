@@ -1,7 +1,8 @@
-# version on a fait pour une couleur maintenent on vas le fair pour les 2 autre mais le code est plutot redondent donc 
+# ici on modifie les code pour quil y a seulement un convantion decriture
 
+from __feature__ import snake_case, true_property
 import sys
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Slot, Signal
 from PySide6.QtGui import QPixmap, QColor
 from PySide6.QtWidgets import ( QApplication,
                                 QWidget,
@@ -10,7 +11,10 @@ from PySide6.QtWidgets import ( QApplication,
                                 QHBoxLayout,
                                 QVBoxLayout)
 
+
 class ColorPicker(QWidget):
+    
+    color_changed = Signal(QColor)
     
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -23,51 +27,51 @@ class ColorPicker(QWidget):
         self.__blue_sb = QScrollBar()
         self.__blue_color = QLabel()
         self.__mixed_color = QLabel()
-        self.__mixed_color.setFixedWidth(fixed_width)
+        self.__mixed_color.fixed_width = fixed_width
         
         red_layout = self.__create_channel(self.__red_sb, self.__red_color, 'Red', fixed_width)
         green_layout = self.__create_channel(self.__green_sb, self.__green_color, 'Green',fixed_width)
         blue_layout = self.__create_channel(self.__blue_sb, self.__blue_color, 'Blue',fixed_width)
         
         channel_layout = QVBoxLayout()
-        channel_layout.addLayout(red_layout)
-        channel_layout.addLayout(green_layout)
-        channel_layout.addLayout(blue_layout)
+        channel_layout.add_layout(red_layout)
+        channel_layout.add_layout(green_layout)
+        channel_layout.add_layout(blue_layout)
 
         layout = QHBoxLayout()
-        layout.addLayout(channel_layout)
-        layout.addWidget(self.__mixed_color)
+        layout.add_layout(channel_layout)
+        layout.add_widget(self.__mixed_color)
         
-        self.setLayout(layout)
+        self.layout = layout
 
 
     def __create_channel(self, sb, color, title_text, fixed_width):
         title = QLabel()
         value = QLabel()
         
-        title.setText(title_text)
-        title.setFixedWidth(fixed_width)
+        title.text = title_text
+        title.fixed_width = fixed_width
         
-        sb.setOrientation(Qt.Horizontal)
-        sb.setRange(0, 255)
-        sb.setValue(0)
-        sb.setMinimumWidth(2 * fixed_width)
+        sb.orientation = Qt.Horizontal
+        sb.set_range(0, 255)
+        sb.value = 0
+        sb.minimum_width = 2 * fixed_width
         
-        value.setNum(0)
-        value.setFixedWidth(fixed_width)
-        value.setAlignment(Qt.AlignCenter)
+        value.num = 0
+        value.fixed_width = fixed_width
+        value.alignment = Qt.AlignCenter
         
-        title.setFixedWidth(fixed_width)
+        title.fixed_width = fixed_width
         
         channel_layout = QHBoxLayout()
-        channel_layout.addWidget(title)
-        channel_layout.addWidget(sb)
-        channel_layout.addWidget(value)
-        channel_layout.addWidget(color)
+        channel_layout.add_widget(title)
+        channel_layout.add_widget(sb)
+        channel_layout.add_widget(value)
+        channel_layout.add_widget(color)
         
         # Etablissement des connexions
-        sb.valueChanged.connect(value.setNum)
-        sb.valueChanged.connect(self.__update_colors)# "red_sb.valueChanged." = signal est "connect(red_value.setNum)" est la slot 
+        sb.value_changed.connect(lambda v: value.set_num(v))
+        sb.value_changed.connect(self.__update_colors)# "red_sb.value_changed." = signal est "connect(red_value.set_num)" est la slot 
         
         return channel_layout
         
@@ -75,8 +79,9 @@ class ColorPicker(QWidget):
     def __update_color(self, color_widget,r,g,b): # elle est prive
         image = QPixmap(color_widget.size())
         image.fill(QColor(r,g,b))
-        color_widget.setPixmap(image)
+        color_widget.pixmap = image
     
+    @Slot()
     def __update_colors(self):
         r = self.__red_sb.value()
         g = self.__green_sb.value()
@@ -85,18 +90,51 @@ class ColorPicker(QWidget):
         self.__update_color(self.__green_color,0,g,0)
         self.__update_color(self.__blue_color,0,0,b)
         self.__update_color(self.__mixed_color,r,g,b)
+        self.color_changed.emit(self.color)
 
-    def showEvent(self, event):
-        super().showEvent(event)
+    def show_event(self, event):
+        super().show_event(event)
         self.__update_colors()
+
+    @property
+    def color(self):
+        r = self.__red_sb.value()
+        g = self.__green_sb.value()
+        b = self.__blue_sb.value()
+        return QColor(r,g,b)
+    
+    @color.setter
+    def color(self, value):
+        if value != self.color:
+            self.__red_sb.value = value.red()
+            self.__green_sb.value = value.green()
+            self.__blue_sb.value = value.blue()
+    
+    def set_color(self, value):
+        self.color = value
+
+class DemoColorPickers(QWidget):
+
+    def __init__(self):
+        super().__init__()
+
+        self._color_pickers = [ColorPicker() for _ in range(5)]
+
+        self._color_pickers[0].color_changed.connect(self._color_pickers[2].set_color)
+
+        layout = QVBoxLayout()
+        for color_picker in self._color_pickers:
+            layout.add_widget(color_picker)
+
+        layout.add_stretch()
+
+        self.layout = layout
 
 
 def main():
     app = QApplication(sys.argv) # ceci est le rapper de l'application c'est ce qui ecoute le imput de l'usager (while action = 0 rien else il dispatch cest info a la bonne place 
 
-    #sys.argv sont les argument passée en ligne de commande quand on lance l'application
-
-    w = ColorPicker() # C'est la fenêtre
+    w = DemoColorPickers() # C'est la fenêtre
 
     w.show() # Affichage de la fenêtre
 
