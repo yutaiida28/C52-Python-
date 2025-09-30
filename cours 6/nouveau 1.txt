@@ -1,0 +1,214 @@
+Short summary / feasibility
+
+Detecting simple motion / people passing between two ESP32s using changes in received signal strength (RSSI) is practical and reasonably easy.
+
+Detecting heartbeat with commodity Wi‑Fi and ESP32 RSSI only is very challenging and may be unreliable. Heartbeat-induced chest movement is extremely small (millimeter/sub‑millimeter) — usually you need phase/IQ data (Channel State Information, CSI) or a dedicated radar/UWB/mmWave sensor to get reliable heartbeat measurements.
+
+Still: you can attempt a heartbeat proof of concept by (a) sending a continuous stream of packets at high rate, (b) measuring RSSI (or phase if your chip exposes it), (c) applying careful signal processing (detrend, bandpass around cardiac frequency ~0.8–3 Hz, envelope/PSD). Expect noisy results and lots of tuning.
+
+Two high‑level approaches
+
+RSSI fluctuations (simplest, easiest on ESP32)
+
+Transmitter: flood small packets (beacons / raw frames / UDP) at a high, steady rate (e.g., 50–500 packets/sec).
+
+Receiver: run in promiscuous mode and sample RSSI for each received packet with timestamps.
+
+Process the RSSI time series: remove slow trend, bandpass filter for motion/heartbeat bands, compute FFT / peak detection or track amplitude envelopes.
+
+Works well for detecting people crossing the line-of-sight or gross motion. Heartbeat detection may be possible only in very controlled conditions (close range, little other motion, good SNR).
+
+CSI / phase/IQ processing (more powerful, more complex)
+
+CSI gives per‑subcarrier complex amplitude and phase change — sensitive to sub‑millimeter motion.
+
+Many Wi‑Fi chipsets do not expose CSI by default. ESP32 historically does not provide full CSI to userland (you’ll need a chipset/driver that exposes it, or an SDR/USRP).
+
+If you can get devices that provide CSI (Intel Wi‑Fi chips + Linux CSI tool, or custom firmware on supported chips), heartbeat becomes much more realistic.
+
+Alternative: use a low‑cost Doppler radar module or a mmWave sensor (TI IWR6xxx) or UWB modules for reliable heartbeat.
+
+Implementation plan using RSSI on ESP32‑S2
+Hardware setup
+
+ESP32‑S2 A: transmitter. Put it in station mode or raw TX and send constant packets.
+
+ESP32‑S2 B: receiver. Put in promiscuous/sniffer mode and record RSSI and timestamp for every received packet.
+
+Antennas: use the devkit antennas provided; placing them fixed, stable, and aligned improves stability.
+
+Try to keep transmitter and receiver on the same channel, and reduce other Wi‑Fi interference (choose a quiet channel).
+
+Transmitter sketch (concept)
+
+Option A: Use esp_wifi_80211_tx() to transmit raw frames quickly.
+
+Option B: Send UDP broadcast packets at a fixed interval (easiest).
+
+Pseudo/Arduino-style sketch (transmit UDP at high rate):
+
+// Transmitter (Arduino-ESP32 style)
+#include <WiFi.h>
+const char* ssid = "ESP_PROJ_AP";
+const char* password = "password";
+WiFiUDP udp;
+
+void setup(){
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  // or create AP and send to broadcast 255.255.255.255
+  WiFi.begin(ssid, password); // or not required for raw tx
+  while (WiFi.status() != WL_CONNECTED) delay(100);
+  udp.begin(1234);
+
+  Serial.println("TX started");
+}
+
+void loop(){
+  static unsigned long last = 0;
+  const unsigned long interval_us = 20000; // 50 packets/sec -> 20ms
+  if (micros() - last >= interval_us) {
+    last = micros();
+    udp.beginPacket("255.255.255.255", 1234);
+    udp.write("ping"); // small payload
+    udp.endPacket();
+  }
+}
+
+
+Notes:
+
+Increase packet rate to 100–500 Hz if receiver and Wi‑Fi stack allow. Higher sample rate = higher chance of measuring heartbeat content.
+
+Using raw 802.11 frames may allow slightly higher rates and lower overhead than UDP.
+
+Receiver sketch (promiscuous mode, capturing RSSI)
+
+ESP-IDF / Arduino snippet (promiscuous callback returns wifi_promiscuous_pkt_t containing rx_ctrl.rssi):
+
+#include "WiFi.h"
+#include "esp_wifi.h"
+
+void promisc_cb(void *buf, wifi_promiscuous_pkt_type_t type) {
+  const wifi_promiscuous_pkt_t *pkt = (wifi_promiscuous_pkt_t *)buf;
+  int8_t rssi = pkt->rx_ctrl.rssi; // RSSI in dBm
+  uint32_t ts_ms = millis();
+  // send rssi + ts to serial or buffer in RAM
+  Serial.printf("%u,%d\n", ts_ms, rssi);
+}
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_MODE_NULL);
+  esp_wifi_set_promiscuous(true);
+  esp_wifi_set_promiscuous_rx_cb(&promisc_cb);
+  esp_wifi_set_promiscuous_filter(NULL); // default accept all
+}
+
+void loop() {
+  // no-op; processing off-board or in another task
+  delay(1000);
+}
+
+
+Notes:
+
+The callback may be called at high rate; ensure callback is fast (store samples into a ring buffer and let a task process).
+
+You may prefer to timestamp with esp_timer_get_time() for microsecond resolution.
+
+Data capture and signal processing
+
+Capture RSSI samples and timestamps (sampled at variable intervals — resample to uniform sampling with interpolation).
+
+Preprocessing:
+
+Convert RSSI (dBm) to linear scale (milliwatts) or use dB changes — either can work.
+
+Remove slow variations: subtract running mean (detrend).
+
+Bandpass filter: for heartbeat look 0.8–3 Hz (48–180 bpm); for breathing 0.1–0.5 Hz (6–30 breaths/min).
+
+Use a bandpass IIR or FIR filter (e.g., Butterworth) or apply short-time FFT.
+
+Detection:
+
+Compute FFT or use Goertzel to detect dominant frequency.
+
+Or compute envelope of the bandpassed signal and detect periodic peaks.
+
+For heartbeat, look for small periodic component at ~1 Hz with consistent amplitude and high SNR.
+
+Example Python post‑processing (offline)
+import numpy as np
+from scipy.signal import butter, filtfilt, welch, resample
+
+# suppose t (seconds) and rssi (dBm) arrays from ESP32
+# resample to uniform fs
+fs = 200.0  # desired sampling rate in Hz
+t_uniform = np.arange(t[0], t[-1], 1/fs)
+rssi_uniform = np.interp(t_uniform, t, rssi)
+
+# detrend / convert dB -> linear (optional)
+rssi_lin = 10**(rssi_uniform / 10.0)
+
+# bandpass 0.8 - 3.0 Hz for heartbeat
+b, a = butter(4, [0.8/(fs/2), 3.0/(fs/2)], btype='band')
+bp = filtfilt(b, a, rssi_uniform - np.mean(rssi_uniform))
+
+# compute PSD / find peak
+f, Pxx = welch(bp, fs=fs, nperseg=1024)
+peak_freq = f[np.argmax(Pxx[(f>0.5) & (f<5.0)])]
+bpm = peak_freq * 60.0
+print("Estimated BPM:", bpm)
+
+Practical tips & tuning
+
+Sampling rate: heartbeat ~1 Hz, but you want >10–20 Hz to capture harmonics and apply filtering robustly. Aim for ≥50 Hz sampling of RSSI. That requires sending/receiving ~50+ packets/sec.
+
+SNR and stability: mount devices so they don’t move. Isolate other moving objects. Multiple trials and averaging help.
+
+Averaging / spatial diversity: use two receivers or multiple APs to combine signals.
+
+Calibration: measure baseline noise when nobody is present. Add shielding or choose quiet Wi‑Fi channels.
+
+Filtering: strong removal of low-frequency drift (moving average subtraction) preserves heartbeat band.
+
+Phase info: if you can access phase or complex samples (IQ), you can detect mm-scale motion much better. ESP32‑S2 generally does not expose CSI/IQ directly.
+
+Realtime vs offline: start by logging to SD / serial and analyze offline in Python to iterate on filters, then implement detection on the ESP or a connected microcontroller.
+
+Realistic expectations & alternative sensors
+
+If your goal is a reliable heartbeat monitor, use radar/Doppler sensors (RCWL-0516 is cheap but limited), UWB modules, or mmWave sensors (TI IWR68xx) — those are purpose-built and far more reliable than RSSI tricks.
+
+If your goal is simple presence / people crossing the line between TX/RX → the RSSI method on ESP32 is a good, low-cost solution.
+
+If you want more advanced Wi‑Fi approaches, look for hardware/software that exposes CSI (e.g., Intel Wi‑Fi NIC + Linux CSI tools) or use an SDR (HackRF/USRP) for I/Q capture.
+
+Example quick roadmap you can follow now
+
+Implement the transmitter UDP flood at a controlled rate (start 50 Hz, increase to 200 Hz).
+
+Implement promiscous receiver capturing (timestamp,RSSI) and log to serial/SD.
+
+Capture baseline data with no subject, then with person walking across and sitting very still at short range (~0.5–1 m).
+
+Run Python offline processing: resample, detrend, bandpass, PSD, peak detection.
+
+If you see a periodic peak ~1 Hz while the subject is very close and still, try to refine to get bpm estimate.
+
+If no heartbeat peak and you need reliability, consider upgrading to sensor that gives CSI/IQ or a radar module.
+
+Sample help I can give next (pick any)
+
+Provide a more complete ESP‑IDF or Arduino code that buffers RSSI into a ring buffer and streams to serial with timestamps.
+
+Provide a ready‑to‑run Python notebook for filtering and peak detection with example synthetic data.
+
+Advise on exact filter coefficients and parameter tuning for your packet rate / range.
+
+Recommend affordable radar/UWB modules that suit heartbeat detection.
+
+Tell me which of the above you want next and I’ll give full code or a notebook.

@@ -1,5 +1,5 @@
 import sys
-from __feature__ import snake_case, true_property
+from __feature__ import snake_case, true_property # type: ignore
 
 from PySide6.QtCore import Qt, QTimer, Slot, Signal
 from PySide6.QtGui import QPixmap, QPainter, QBrush, QImage
