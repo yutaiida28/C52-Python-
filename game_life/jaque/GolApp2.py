@@ -42,6 +42,11 @@ class QInfoWidget(QGroupBox):
         self.__layout.addWidget(self.__revolution_label)
 
         self.setLayout(self.__layout)
+    def update_info(self):
+        self.__total_label.setText(f"Cells: {self.__engine.cells_count}")
+        self.__alive_label.setText(f"Cells alive: {self.__engine.cells_alive}")
+        self.__dead_label.setText(f"Cells dead: {self.__engine.cells_dead}")
+        self.__revolution_lable.setText(f"Revolution: {self.__revolution}")
 
         
         
