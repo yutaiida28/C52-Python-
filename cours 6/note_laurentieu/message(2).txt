@@ -1,0 +1,86 @@
+# zone de recherche
+# x-------------------------------x algo recursif de couper en deux
+# 0 1 2       5        7         10
+
+# premierement on a mit en place l intervalle sans se rendre compte ( intervalle de recherche )
+
+# recherche de moins infi et plus infi
+
+# domaine ( nombre entier, nombre flotant et pour chacun des dimensions)
+
+# ca nous prends une genre de fonction si je m approche ou m eloigne ( froid chaud )
+
+
+
+# objectif
+
+# Une situation : production de biscuit rond et biscuit triangulaire, determiner la forme , poru etre capable que le robot le prenne et qu il le mette dans la bonne boite 
+
+# image 100 x 100, image binaire, forme noir et forme blanche avec 0 et 1
+
+# a partir du genre les points les plus eloigner du centre sont a la mm distance alors c est un cercle, mais probleme si la distance pour un triangle ca peut aussi etre 1 1 1 pour les coins.
+
+# reformulation : trouver des informations sur les formes, ne pas comparer tous les pixels car c est trop long.
+
+# reduction de complecite : x y, distance du contour du centre
+
+# aire cercle = 1000
+# aire triangle 780
+
+# intervale de recherche
+
+--------------------------------------------> A
+            780                     1000
+
+# image non categoriser -> regarer son aire -> air inconnue a 790
+# c est proche d un triangle, mais toujours des variantes.
+# peut importe ou se trouve mon image, mais on a presque le meme aire, puis on calcule la distance
+
+# 1 - calculer l air
+# 2 - calculer la distance entre un biscuit rond et bisctuit triangulaire
+
+# si maintenant on a nouveau biscuit etoilee -> aire a 810
+
+--------------------------------------------> A
+            780         810          1000
+            triangle     etoile        cercle
+
+# maintenant on a trois distance, et on doit *introduire un 2 eme axe*
+
+# on prends le graphique et on ajoute le perimetre
+# Perimetre
+# 
+# cercle : a = 1000, p = 700, nc = 0
+# triangle : a = 780, p = 900, nc = 3
+# etoile : a = 810, p = 1800, nc = 10
+# 
+#                  |
+#            1800  |-------------------------___
+#                  |                        |   \
+#                  |                        |    \
+#                  |                        |     \
+#            900   |------------            |      \
+#                  |           |            |       \
+#                  |           |            |        \____
+#            700   |--------------------------------------
+#                  |           |            |            |
+#                  |           |            |            |
+#                  |           |            |            |
+#                  |           |            |            |
+#                  --------------------------------------------> A
+#                              780         810          1000
+#                              triangle     etoile        cercle
+
+# on peut par la suite creer une matrice avec les propriete les calculer rapidement
+
+# on a un probleme de calssificaton determiner le nombre de ..., prendre les donneer de reference et les positionner la l espace. Je suis un bisctuit inconnu
+
+# 1d = | p - r = racine((p-r)**2)
+# 2d = racine((px-rx)**2 + (py - ry)**2)
+# 3d = racine((px-rx)**2 + (py+ry)**2 + (pz+rz)**2)
+
+# racine(somme(pi-ri)**2) --> pythagore en nDimension
+
+# knn le seul import qu il vas faire c est numpy, 2 dimension, 200 dimension, 23432 dimension, knn --> oop
+
+# choisir trois metrique, qu on vas utiliser pour classifier les donnees

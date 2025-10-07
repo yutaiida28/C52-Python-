@@ -1,0 +1,132 @@
+import numpy as np
+
+#1
+
+# bool_
+
+#2
+
+# l importance dans une matrice x y ou y x, c est arbitraire a la base
+# mais si on utilise x y alors on doit toujours utiliser cette convention
+
+# mais elle peut etre briser car d autre librairire peuvent utiliser leur propre convenction
+# et en 2d on vas parler x en ligne et y en colonne
+# mais on vas parler de r c pour row et colonne
+# dans numpy on peut dire row ou colonne indexee dans l autre ou l autre
+
+def create_image(size):
+    # on le dit d en avance par exemple
+    return np.zeros((size[1], size[0]), dtype = np.uint8)
+
+im = create_image((20,20))
+
+def create_image(image, color):
+    # pointe sur un autre buffer, la fonction termine et lenouveau buffer est allouer donc la garbage collector part avec et l image n a jamais changer
+    # c est pas le meme objet
+    # image = np.zeros((size[1], size[0]), dtype = np.uint8)
+
+    #astuce comment faire 
+    #parcours dans les deux axes et mes des 0 ou 1 partout 
+    # image[0:, 0:] = color
+
+    # ou sinon faire, c est du slicing
+    image[:, :] = color
+
+    # ou sinon faire
+    # -> =========
+    # -> =========
+    # -> =========
+    # -> =========
+    # -> =========
+    image[:] = color
+
+    # le .fill est encore plus perfomant et on parle de picoseconde et c est tres explicite
+
+def randomize(image, percent=0.5):
+    # le probleme avec choice c est qu on ne vas pas respecter le pourcentage mais pour chacun d entre deux et on veut avoir une ponderation differente, lui est 50 % lui est 75% et c est pas la bonne methode
+    # image[:] = np.random.choice((0, 1), image.shape, p=[1-percent, percent])
+
+
+    rng = np.random.default_rng()
+
+    # a besoin de deux boucle for
+    
+    # ca vas creer n nombre aleatoire que le shape donc 10, 10 donc 100 n nombre aleatoire entre 0 et 1 
+    n = rng.random(image.shape) 
+    # decision si oui ou non si egal a 1 ou pas 
+    # ca vas donner une matrice de 0 et 1 
+    # n <= percent ce vectorise mais le if et else ne se vectorise pas 
+    # color = 0 if n <= percent else 1
+
+    t = n <= percent
+    # recupere le type de l imag et transforme en boolean donc de false a 0 et true a 1
+    c = t.astype(image.dtype)
+    image[:] = c
+
+    # encore plus compact, gain reel mais c est pas fou et c pas facile lisible
+    # ca c est du array programming, meme logique mais on pense autrement et ca c est du numpy
+
+    # meilleur que choice car c est plus rapide
+    image[:] = (rng.random(image.shape) <= percent).astype(image.dtype)
+
+def reset_border(image, color=1):
+    image[:, 0] = color
+    image[:, -1] = color
+    image[0:] = color
+    image[-1:] = color
+
+    # on prends les deux element 
+    image[:, [0, -1]] = color
+    image[[0, -1], : ] = color
+
+def draw_circle(image, center, radius):
+    # de base on aurait faire une double for
+    # dessine un cercle a partir du cercle a partir du rayon
+    
+    # evaluer chacun de ces pixel quelle est sa distance a partir du centre du cercle
+    # si cette distance est inferieure ou egale au rayon si superieur on touche pas
+    # x0, y0 = image.shape[0]
+    # x1, y1 = image.shape[1]
+    # cx, cy = center
+    
+    # distance = np.linalg.norm([y1-y0, x1-x0])
+
+    # color = 
+
+    #inverser la logique
+    # xr = np.arange(image.shape[1])
+    # yr = np.arange(image.shape[1])
+    # # generer un tuple avec deux valeures
+    # xi, yi = np.meshgrid(xr, yr)
+    # cx, cy = center
+    
+    # dx = xi - cx
+    # dy = yi - cy
+
+    # # distance = np.sqrt(dx ** 2 + dy ** 2) ** 0.5
+    
+    # distance = np.sqrt(dx ** 2 + dy ** 2)
+    
+    # trace = (distance <= radius).astype(np.int32)
+
+    # # on ne peut pas faire or comme en python
+    # new_im = np.logical_or(image, trace)
+
+    
+    # image[:] = new_im
+
+    cx, cy = center
+    r2 = radius ** 2
+    c, r = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
+
+    # faire la matrice de distance, mais pas faire la racine carree
+
+    # les pixel que je veux modifier
+    image[(c - cx) ** 2 + (r - cy) ** 2 <= r2] = 1
+                         
+
+
+draw_circle(im, (9, 9), 5)
+draw_circle(im, (12, 5), 5)
+
+print(im)
