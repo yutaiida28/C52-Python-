@@ -21,20 +21,26 @@ maze = (
 
 step =  0
 wall_hit = 0
-visited_cells = 0.0
+visited_cell = 0.0
+case_vide = None
 goal = False
 valid_move = False
+visited_cells = set([])
 DIRECTION = ("w","a","s","d")
 pos = (0,1)
 
-def in_bound(next_pos,pos):
+def in_bound(next_pos,pos,goal):
+
     if maze[next_pos[0]][next_pos[1]] == " ":
         pos = tuple(next_pos)
-        return pos
-    else:
-        return pos
+        
+    if maze[next_pos[0]][next_pos[1]] == "G":
+        goal = True
 
-def try_move(move,pos):
+        
+    return pos, goal
+
+def try_move(move,pos, goal):
     next_pos = list(pos)
     match move:
         case "w":
@@ -45,18 +51,29 @@ def try_move(move,pos):
             next_pos[0]+=1
         case "d":
             next_pos[1]+=1
-    pos = in_bound(next_pos,pos)
-    return pos
+    pos, goal = in_bound(next_pos, pos, goal)
+    return pos, goal
         
-def check(move,pos):
-    move = move.lower()
-    for d in DIRECTION:
-        if move == d:
-            pos = try_move(move,pos)
-            return pos
-            
+def check(move, pos, goal):
+    if move != "":
+        move = move[0]
+        move = move.lower()
+        for d in DIRECTION:
+            if move == d:
+                pos, goal = try_move(move, pos, goal)
 
-def print_maze(maze, pos):
+    return pos, goal
+
+def occurences_case_vide():
+    case_vide = 0
+    for m in maze:
+        case_vide += m.count(" ")
+    return case_vide
+
+def visited():
+    return (len(visited_cells)/case_vide * 100)
+
+def print_maze(pos, goal, wall_hit,step):
     y,x = pos
     for m in maze:
         if maze.index(m) == y :
@@ -70,23 +87,26 @@ def print_maze(maze, pos):
 
     print("number of steps : " + str(step))
     print("number of walls hit : " + str(wall_hit))
-    print("Ratio empty cells visited: " + str(visited_cells) + " %")
+    print("Ratio empty cells visited: " + str(visited()) + " %")
     move = input("Direction (wasd) :")
-    pos = check(move[0],pos)
-    return pos
+    pos2, goal = check(move,pos, goal)
+    if pos == pos2:
+        wall_hit += 1
+    else:
+        step += 1
+    return pos2, goal, wall_hit,step
 
     
-first = True
+case_vide = occurences_case_vide()
 while not goal:
-    valid_move = False
-    if first:
-        pos = print_maze(maze, pos)
-        first = False
-
+    
     if not valid_move:
         clear_screen()
-        pos = print_maze(maze, pos)
+        pos,goal, wall_hit, step = print_maze(pos, goal, wall_hit,step)
+        visited_cells.add(pos)
     else:
         print("hola")
 
+clear_screen()
+print("victoir !!!!")
         
