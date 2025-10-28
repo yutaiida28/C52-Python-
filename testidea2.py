@@ -54,7 +54,7 @@ image[*p3]=5
 image[*p4]=6
 # get_centroid(p1,p2,p3,p4)
 rayon, centroid= get_centroid2(p1,p2,p3)
-print(rayon)
-print(centroid)
+print("rayon :"+ rayon)
+print("centroid du rectengle :"+centroid)
 print(image)
 #donc jai le centroid de limage + rayon du cercle qui couvre le tout
