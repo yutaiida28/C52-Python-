@@ -71,7 +71,7 @@ def occurences_case_vide():
     return case_vide
 
 def visited():
-    return (len(visited_cells)/case_vide * 100)
+    return round(len(visited_cells)/case_vide * 100,1)
 
 def print_maze(pos, goal, wall_hit,step):
     y,x = pos
