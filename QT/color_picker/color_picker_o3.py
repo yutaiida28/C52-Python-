@@ -106,11 +106,11 @@ class ColorPicker(QWidget):
         return QColor(r,g,b)
     
     @color.setter
-    def color(self, value):
+    def color(self, value:QColor):
         if value != self.color:
-            self.__red_sb.value() = value.red()
-            self.__green_sb.value() = value.green()
-            self.__blue_sb.value() = value.blue()
+            self.__red_sb.value = value.red()
+            self.__green_sb.value = value.green()
+            self.__blue_sb.value = value.blue()
 
 class DemoColorPickers(QWidget):
 

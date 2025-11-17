@@ -103,7 +103,7 @@ class GOLEngine:
 def main():
     gol = GOLEngine(4, 4)
     
-    # gol.resize(12, 9)
+    gol.resize(12, 9)
     # print(f'taille : {gol.width} x {gol.height}')
 
     # gol.width = 13
