@@ -119,12 +119,6 @@ class GOLEngine:
         self.__live_cell = vivant
         self.__dead_cell = self.__total_cell -vivant
 
-
-    
-
-
-
-
     def fill(self,value = 0):
         num = int(value == 1)
         self.__grid = [[num for _ in range(self.__height)] for _ in range(self.__width)]

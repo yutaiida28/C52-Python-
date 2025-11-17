@@ -136,7 +136,8 @@ class GameOfLifeApp(QWidget):
         self.setWindowTitle("Game of Life - Optimized")
         
         # Initialize engine
-        self.__engine = GOLEngine(200, 200)
+        # self.__engine = GOLEngine(200, 200)
+        self.__engine = GOLEngine(20, 20)
         self.__engine.randomize(0.7)
         
         self.__setup_ui()

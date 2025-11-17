@@ -83,7 +83,7 @@ class GOLEngine:
         self.__width = width
         self.__height = height
         
-        self.__grid = np.zeros((self.__height, self.__width), dtype=np.uint8)
+        self.__grid = np.zeros((self.__height, self.__width), dtype=np.uint32)
         self.__temp = deepcopy(self.__grid)
         
         self.__generation = 0
@@ -101,8 +101,18 @@ class GOLEngine:
         self.__generation = 0
         self.__update_info(self.__grid)
         
-def process(self):
+    def process(self):
         """Process one generation of the Game of Life."""
+        # _, w = self.__grid.shape
+        # data = self.__grid.flatten().astype(np.int32)
+        # data = np.where(data == 0, 1, 0)
+        # coord = np.arange(data.size)
+        # coordActivated = coord[data == False]
+        # top = data[coordActivated - w]
+        # left, right = data[[coordActivated - 1, coordActivated + 1]]
+        # bottom = data[coordActivated + w]
+        # total = top + bottom + left + right
+
         for x in range(1, self.__width - 1):
             for y in range(1, self.__height - 1):
                 # Count living neighbors using optimized slicing
@@ -111,7 +121,7 @@ def process(self):
                            + sum(self.__grid[x+1][y-1:y+2])
                 
                 # Apply rules using LUT
-                self.__temp[x][y] = self.__rules[self.__grid[x][y]][neighbours]
+                self.__temp[y][x] = self.__rules[self.__grid[x][y]][neighbours]
 
     def __update_info(self,image : np.array):
         _, w = image.shape
@@ -122,10 +132,3 @@ def process(self):
         self.__dead_cell = self.__total_cell - vivant
 
        
-
-    # def __update_info(self):
-    #     """Update cell statistics."""
-    #     self.__total_cell = self.__width * self.__height
-    #     vivant = sum(sum(self.__grid[x][:]) for x in range(self.__width))
-    #     self.__live_cell = vivant
-    #     self.__dead_cell = self.__total_cell - vivant
