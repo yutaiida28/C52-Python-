@@ -18,9 +18,12 @@ class GOLEngine:
         
         # Rules as Look-Up Tables (LUT)
         #                    0, 1, 2, 3, 4, 5, 6, 7, 8 <--- Number of living neighbors
-        self.__alive_rule = (0, 0, 1, 1, 0, 0, 0, 0, 0)  # Survive with 2 or 3 neighbors
-        self.__dead_rule  = (0, 0, 0, 1, 0, 0, 0, 0, 0)  # Born with 3 neighbors
-        self.__rules = (self.__dead_rule, self.__alive_rule)
+        # self.__alive_rule = (0, 0, 1, 1, 0, 0, 0, 0, 0)  # Survive with 2 or 3 neighbors
+        # self.__dead_rule  = (0, 0, 0, 1, 0, 0, 0, 0, 0)  # Born with 3 neighbors
+        # self.__rules = (self.__dead_rule, self.__alive_rule)
+        self.__alive_rule = np.array([0, 0, 1, 1, 0, 0, 0, 0, 0], dtype=np.uint8)
+        self.__dead_rule  = np.array([0, 0, 0, 1, 0, 0, 0, 0, 0], dtype=np.uint8)
+        self.__rules = np.stack((self.__dead_rule,self.__alive_rule))
         
         self.resize(width, height)
     @property
@@ -103,25 +106,30 @@ class GOLEngine:
         
     def process(self):
         """Process one generation of the Game of Life."""
-        # _, w = self.__grid.shape
-        # data = self.__grid.flatten().astype(np.int32)
+        h, w = self.__grid.shape
+        data = self.__grid.flatten().astype(np.int32)
         # data = np.where(data == 0, 1, 0)
-        # coord = np.arange(data.size)
-        # coordActivated = coord[data == False]
-        # top = data[coordActivated - w]
-        # left, right = data[[coordActivated - 1, coordActivated + 1]]
-        # bottom = data[coordActivated + w]
-        # total = top + bottom + left + right
+        coord = np.arange(data.size)
+        coordActivated = coord[data == True]
+        top = data[coordActivated - w]
 
-        for x in range(1, self.__width - 1):
-            for y in range(1, self.__height - 1):
-                # Count living neighbors using optimized slicing
-                neighbours = sum(self.__grid[x-1][y-1:y+2]) \
-                           + sum(self.__grid[x][y-1:y+2:2]) \
-                           + sum(self.__grid[x+1][y-1:y+2])
+        top_left, top_right = data[[coordActivated-1, coordActivated+1]]
+        left, right = data[[coordActivated - 1, coordActivated + 1]] 
+        bottom = data[coordActivated + w]
+        bottom_left, bottom_right = data[[coordActivated -1, coordActivated +1]]
+        total = top + bottom + left + right + top_left + top_right + bottom_left + bottom_right
+
+        self.__temp[1:-1,1:-1] = self.__rules[coordActivated, total]
+        # self.__temp[y][x] = self.__rules[self.__grid[x][y]][neighbours]
+        # for x in range(1, self.__width - 1):
+        #     for y in range(1, self.__height - 1):
+        #         # Count living neighbors using optimized slicing
+        #         neighbours = sum(self.__grid[x-1][y-1:y+2]) \
+        #                    + sum(self.__grid[x][y-1:y+2:2]) \
+        #                    + sum(self.__grid[x+1][y-1:y+2])
                 
-                # Apply rules using LUT
-                self.__temp[y][x] = self.__rules[self.__grid[x][y]][neighbours]
+        #         # Apply rules using LUT
+        #         self.__temp[y][x] = self.__rules[self.__grid[x][y]][neighbours]
 
     def __update_info(self,image : np.array):
         _, w = image.shape
